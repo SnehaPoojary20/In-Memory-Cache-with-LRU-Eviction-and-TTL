@@ -2,62 +2,49 @@ package lru;
 
 import java.util.HashMap;
 
-public class LRUCache {
+public class LRUCache<K, V> {
 
+    private final HashMap<K, CacheNode<K, V>> map;
     private final int capacity;
-    private final HashMap<Integer, CacheNode> map;
-
-    private CacheNode head; // Most Recently Used
-    private CacheNode tail; // Least Recently Used
+    private CacheNode<K, V> head;
+    private CacheNode<K, V> tail;
 
     public LRUCache(int capacity) {
         this.capacity = capacity;
         this.map = new HashMap<>();
     }
 
-    //  Helper Methods 
-
-    private void addToFront(CacheNode node) {
+    private void addToFront(CacheNode<K, V> node) {
         node.prev = null;
         node.next = head;
-
-        if (head != null) {
-            head.prev = node;
-        }
+        if (head != null) head.prev = node;
         head = node;
+        if (tail == null) tail = node;
+    }
 
-        if (tail == null) {
-            tail = node;
+    private void removeNode(CacheNode<K, V> node) {
+        if (node.prev != null) node.prev.next = node.next;
+        else head = node.next;
+
+        if (node.next != null) node.next.prev = node.prev;
+        else tail = node.prev;
+    }
+
+    private void moveToFront(CacheNode<K, V> node) {
+        if (node != head) {
+            removeNode(node);
+            addToFront(node);
         }
     }
 
-    private void removeNode(CacheNode node) {
-        if (node.prev != null) {
-            node.prev.next = node.next;
-        } else {
-            head = node.next;
-        }
-
-        if (node.next != null) {
-            node.next.prev = node.prev;
-        } else {
-            tail = node.prev;
-        }
-    }
-
-    private void moveToFront(CacheNode node) {
-        removeNode(node);
-        addToFront(node);
-    }
-
-    private boolean isExpired(CacheNode node) {
+    private boolean isExpired(CacheNode<K, V> node) {
         return System.currentTimeMillis() > node.expiryTime;
     }
 
     private void removeExpiredEntries() {
-        CacheNode current = head;
+        CacheNode<K, V> current = head;
         while (current != null) {
-            CacheNode next = current.next;
+            CacheNode<K, V> next = current.next;
             if (isExpired(current)) {
                 removeNode(current);
                 map.remove(current.key);
@@ -66,27 +53,25 @@ public class LRUCache {
         }
     }
 
-    // Public API 
-
-    public int get(int key) {
-        CacheNode node = map.get(key);
-        if (node == null) return -1;
+    public V get(K key) {
+        CacheNode<K, V> node = map.get(key);
+        if (node == null) return null;
 
         if (isExpired(node)) {
             removeNode(node);
             map.remove(node.key);
-            return -1;
+            return null;
         }
 
         moveToFront(node);
         return node.value;
     }
 
-    public void put(int key, int value, long ttlMillis) {
+    public void put(K key, V value, long ttlMillis) {
         removeExpiredEntries();
 
         if (map.containsKey(key)) {
-            CacheNode existing = map.get(key);
+            CacheNode<K, V> existing = map.get(key);
             existing.value = value;
             existing.expiryTime = System.currentTimeMillis() + ttlMillis;
             moveToFront(existing);
@@ -98,9 +83,10 @@ public class LRUCache {
             removeNode(tail);
         }
 
-        CacheNode node = new CacheNode(key, value, ttlMillis);
+        CacheNode<K, V> node = new CacheNode<>(key, value, ttlMillis);
         addToFront(node);
         map.put(key, node);
     }
 }
+
 

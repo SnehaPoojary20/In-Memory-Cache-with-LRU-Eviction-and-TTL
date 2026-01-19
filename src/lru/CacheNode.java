@@ -1,19 +1,16 @@
 package lru;
 
-/**
- * Represents a single cache entry node in the doubly linked list
- */
-public class CacheNode {
-    int key;
-    int value;
+public class CacheNode<K, V> {
+    K key;
+    V value;
     long expiryTime;
+    CacheNode<K, V> prev;
+    CacheNode<K, V> next;
 
-    CacheNode prev;
-    CacheNode next;
-
-    public CacheNode(int key, int value, long ttlMillis) {
+    public CacheNode(K key, V value, long ttlMillis) {
         this.key = key;
         this.value = value;
         this.expiryTime = System.currentTimeMillis() + ttlMillis;
     }
 }
+
