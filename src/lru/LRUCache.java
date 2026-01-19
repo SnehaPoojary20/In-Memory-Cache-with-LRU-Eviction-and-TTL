@@ -15,7 +15,7 @@ public class LRUCache {
         this.map = new HashMap<>();
     }
 
-    // ================= Helper Methods =================
+    //  Helper Methods 
 
     private void addToFront(CacheNode node) {
         node.prev = null;
@@ -66,7 +66,7 @@ public class LRUCache {
         }
     }
 
-    // ================= Public API =================
+    // Public API 
 
     public int get(int key) {
         CacheNode node = map.get(key);
